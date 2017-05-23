@@ -10,14 +10,14 @@ bestKey = None
 bestPlaintext = None
 bestCiphertext = None
 for line in file:
-	ciphertext = hex2bytes(line[:-1]) #ommit \n
-	plaintext,key,score = breakSingleByteXOR(ciphertext);
-	
-	if bestScore < score:
-		bestScore = score
-		bestKey = key
-		bestPlaintext = plaintext
-		bestCiphertext = ciphertext
+    ciphertext = hex2bytes(line[:-1])  # ommit \n
+    plaintext, key, score = breakSingleByteXOR(ciphertext)
+
+    if bestScore < score:
+        bestScore = score
+        bestKey = key
+        bestPlaintext = plaintext
+        bestCiphertext = ciphertext
 
 print("Ciphertext:")
 hexdump(bestCiphertext)

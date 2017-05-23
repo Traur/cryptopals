@@ -14,6 +14,6 @@ print("== equals ==")
 hexdump(result)
 
 if result == hex2bytes("746865206b696420646f6e277420706c6179"):
-	print("Challenge 2 successful!")
+    print("Challenge 2 successful!")
 else:
-	print("Challenge 2 failed miserably")
+    print("Challenge 2 failed miserably")
