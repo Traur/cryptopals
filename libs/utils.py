@@ -35,13 +35,38 @@ def hex2bytes(hexstring):
 	assert result == bytearray.fromhex(hexstring), "{0} == {1}".format()
 	return result;
 	
+def hex2base64(hex):
+    return bytes2base64(hex2bytes(hex))
 	
-def bytes2base64(byarInput):
-	### Insert from my code
-	return base64.b64encode(byarInput)
-	
-def hex2base64(hexstring):
-	return bytes2base64(hex2bytes(hexstring))
+def bytes2base64(bytes):
+	base64Dict2 = {
+		0x0: "A",  0x10: "Q",  0x20: "g",  0x30: "w",
+		0x1: "B",  0x11: "R",  0x21: "h",  0x31: "x",
+		0x2: "C",  0x12: "S",  0x22: "i",  0x32: "y",
+		0x3: "D",  0x13: "T",  0x23: "j",  0x33: "z",
+		0x4: "E",  0x14: "U",  0x24: "k",  0x34: "0",
+		0x5: "F",  0x15: "V",  0x25: "l",  0x35: "1",
+		0x6: "G",  0x16: "W",  0x26: "m",  0x36: "2",
+		0x7: "H",  0x17: "X",  0x27: "n",  0x37: "3",
+		0x8: "I",  0x18: "Y",  0x28: "o",  0x38: "4",
+		0x9: "J",  0x19: "Z",  0x29: "p",  0x39: "5",
+		0xA: "K",  0x1A: "a",  0x2A: "q",  0x3A: "6",
+		0xB: "L",  0x1B: "b",  0x2B: "r",  0x3B: "7",
+		0xC: "M",  0x1C: "c",  0x2C: "s",  0x3C: "8",
+		0xD: "N",  0x1D: "d",  0x2D: "t",  0x3D: "9",
+		0xE: "O",  0x1E: "e",  0x2E: "u",  0x3E: "+",
+		0xF: "P",  0x1F: "f",  0x2F: "v",  0x3F: "/"
+		}
+
+	result = list()
+	for i in range(0, len(bytes), 3):
+		threeBytes = (bytes[i] << 16) | (bytes[i+1] << 8) | (bytes[i+2])
+		result.append(base64Dict2[(threeBytes >> 18) & 0b00111111]) 
+		result.append(base64Dict2[(threeBytes >> 12) & 0b00111111]) 
+		result.append(base64Dict2[(threeBytes >> 6) & 0b00111111]) 
+		result.append(base64Dict2[(threeBytes) & 0b00111111]) 
+
+	return result
 	
 def hexdump(pBytes, width=16):
 	for i in range(0, len(pBytes), width):
