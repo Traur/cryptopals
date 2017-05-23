@@ -1,7 +1,7 @@
 # https://cryptopals.com/sets/1/challenges/2
 
 
-from libs.helper import hex2bytes, bytes2hex, hexdump
+from libs.utils import hex2bytes, bytes2hex, hexdump
 from libs.crypto.xor import fixedXOR
 
 buffer1 = hex2bytes("1c0111001f010100061a024b53535009181c")

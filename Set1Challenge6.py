@@ -1,6 +1,6 @@
 # https://cryptopals.com/sets/1/challenges/5
 
-from libs.helper import hexdump, hex2bytes, partitionList
+from libs.utils import hexdump, hex2bytes, partitionList
 from libs.crypto.xor import repeatingKeyXOR, breakSingleByteXOR, estimateKeysize
 from libs.analysis import editDistance
 import base64 #TODO

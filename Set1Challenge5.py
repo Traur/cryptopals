@@ -1,6 +1,6 @@
 # https://cryptopals.com/sets/1/challenges/5
 
-from libs.helper import hexdump, hex2bytes
+from libs.utils import hexdump, hex2bytes
 from libs.crypto.xor import repeatingKeyXOR
 
 plaintext = bytearray("Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", "utf-8")

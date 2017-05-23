@@ -1,6 +1,6 @@
 # https://cryptopals.com/sets/1/challenges/3
 
-from libs.helper import hex2bytes, bytes2hex, hexdump
+from libs.utils import hex2bytes, bytes2hex, hexdump
 from libs.analysis import scoreEnglish
 from libs.crypto.xor import breakSingleByteXOR
 
