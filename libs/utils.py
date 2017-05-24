@@ -73,7 +73,7 @@ def hexdump(pBytes, title="", width=16):
     line = list()
 
     if(title != ""):
-        line.append("{0}:".format(title))
+        print("{0}:".format(title))
 
     for i in range(len(p)):
         tmp = "{:05d}\t".format(i)
@@ -96,6 +96,11 @@ def partitionList(mylist, buckets):
     for i in range(0, len(mylist), buckets):
         result.append(mylist[i:i + buckets])
     return result
+
+
+def RotWordLeft(word, n=1):
+    n = n % len(word)
+    return word[n:]+word[:n] 
 
 
 if __name__ == "__main__":
