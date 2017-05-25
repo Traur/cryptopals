@@ -302,10 +302,13 @@ def AES128Decrypt_ECB(input, key):
 
     return plaintexts
 
+def detectECB(ciphertext):
+    p = partitionList(ciphertext, 16)
+    score = 0
+    for i in range(len(p)):
+        for k in range(len(p)):
+            if i != k and p[i] == p[k]:
+                score += 1
 
-
-
-
-    
-
+    return score
 
