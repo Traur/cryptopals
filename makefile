@@ -7,7 +7,7 @@ clean:
 	autopep8 -r -i .
 
 run:
-	python3 Set$(s)Challenge$(c).py
+	python3 Set$(s)/Set$(s)Challenge$(c).py
 
 init:
 	export PYTHONPATH=:$(shell echo $$PYTHONPATH):$(shell pwd)/libs
