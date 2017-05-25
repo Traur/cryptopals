@@ -61,6 +61,7 @@ def SubBytes(s):
         state[i] = ForwardSBox[s[i]]
     return state
 
+
 def InvSubBytes(s):
     global ForwardSBox, InverseSBox
     state = s[:]
@@ -71,10 +72,12 @@ def InvSubBytes(s):
         state[i] = InverseSBox[s[i]]
     return state
 
+
 def ShiftRows(s):
     state = s[:]
 
     def shift(r, Nb): return r % 4
+
     def map(r, c): return r + (4 * (c + shift(r, 4))) % 16
 
     for r in range(4):
@@ -82,17 +85,20 @@ def ShiftRows(s):
             state[r + 4 * c] = s[map(r, c)]
     return state
 
+
 def InvShiftRows(s):
     state = s[:]
 
     def shift(r, Nb): return r % 4
+
     def map(r, c): return r + (4 * (c + shift(r, 4))) % 16
 
     for r in range(4):
         for c in range(4):
-            state[map(r,c)] = s[r + 4 * c]
+            state[map(r, c)] = s[r + 4 * c]
 
     return state
+
 
 def MixColumns(s):
     m = [0x02, 0x03, 0x01, 0x1]
@@ -106,6 +112,7 @@ def MixColumns(s):
             state[r + offset] = result
             m = RotWordLeft(m, 3)
     return state
+
 
 def InvMixColumns(s):
     m = [0x0e, 0x0b, 0x0d, 0x09]
@@ -121,60 +128,62 @@ def InvMixColumns(s):
     return state
 
 
-
 def word2bytes(word):
     result = bytearray(4)
     for i in range(4):
-        result[i] = (word >> i*8) & 0xff
+        result[i] = (word >> i * 8) & 0xff
     return result[::-1]
+
 
 def bytes2word(bytes):
     result = 0x0
     bytes = bytes[::-1]
-    for i,n in enumerate(bytes):
-        result |= (n << i*8)
+    for i, n in enumerate(bytes):
+        result |= (n << i * 8)
     return result
+
 
 def KeyExpansion(key):
     Nk = 4  # (number of words in Key)
     Nb = 4  # (Number of Bytes in Word)
     Nr = 10  # (12 or 14 -> Number of Rounds)
 
-    necessaryWords =  Nb * (Nr + 1)
+    necessaryWords = Nb * (Nr + 1)
     w = [0] * necessaryWords
-    
+
     # Step 1: Copy key as 4Byte-Words into List()
     p = partitionList(key, 4)
-    for i,l in enumerate(p):
+    for i, l in enumerate(p):
         w[i] = bytes2word(l)
 
     Rcon = list(
-        [0xCAFEBABE, # Rcon starts with i=1
-         0x01000000, 
-         0x02000000, 
-         0x04000000, 
-         0x08000000, 
+        [0xCAFEBABE,  # Rcon starts with i=1
+         0x01000000,
+         0x02000000,
+         0x04000000,
+         0x08000000,
          0x10000000,
-         0x20000000, 
-         0x40000000, 
-         0x80000000, 
+         0x20000000,
+         0x40000000,
+         0x80000000,
          0x1b000000,
          0x36000000])
 
     for i in range(Nk, necessaryWords):
         # Take the previous word
-        temp = w[i-1]
+        temp = w[i - 1]
         if i % Nk == 0:
             afterRotWord = bytes2word(RotWordLeft(word2bytes(temp)))
             afterSubBytes = bytes2word(SubBytes(word2bytes(afterRotWord)))
-            afterRcon = afterSubBytes ^ Rcon[i//Nk]
+            afterRcon = afterSubBytes ^ Rcon[i // Nk]
             temp = afterRcon
 
         elif Nk > 6 and i % Nk == 4:
             temp = bytes2word(SubBytes(word2byte(temp)))
-        w[i] = w[i-Nk] ^ temp
+        w[i] = w[i - Nk] ^ temp
 
     return w
+
 
 def AddRoundKey(s, w_l):
     """
@@ -182,15 +191,17 @@ def AddRoundKey(s, w_l):
     """
     return fixedXOR(s, w_l)
 
-def getRoundKeys(keys):
-    result = bytearray(4*4)
 
-    for i,k in enumerate(keys):
+def getRoundKeys(keys):
+    result = bytearray(4 * 4)
+
+    for i, k in enumerate(keys):
         bytes = word2bytes(k)
         for j, b in enumerate(bytes):
-            result[i*4+j] = b
+            result[i * 4 + j] = b
 
     return result
+
 
 def AES128Encrypt(input, key):
     """
@@ -216,7 +227,7 @@ def AES128Encrypt(input, key):
         log.info("round[{0:1d}].s_row\t{1}".format(round, bytes2hex(state)))
         state = MixColumns(state)
         log.info("round[{0:1d}].m_col\t{1}".format(round, bytes2hex(state)))
-        roundKey = getRoundKeys(w[round*Nb : (round+1)*Nb])
+        roundKey = getRoundKeys(w[round * Nb: (round + 1) * Nb])
         log.info("round[{0:1d}].k_sch\t{1}".format(round, bytes2hex(roundKey)))
         state = AddRoundKey(state, roundKey)
 
@@ -225,12 +236,13 @@ def AES128Encrypt(input, key):
     log.info("round[{0:1d}].s_box\t{1}".format(10, bytes2hex(state)))
     state = ShiftRows(state)
     log.info("round[{0:1d}].s_row\t{1}".format(10, bytes2hex(state)))
-    roundKey = getRoundKeys(w[Nr*Nb: (Nr+1)*Nb])
+    roundKey = getRoundKeys(w[Nr * Nb: (Nr + 1) * Nb])
     log.info("round[{0:1d}].k_sch\t{1}".format(10, bytes2hex(roundKey)))
     state = AddRoundKey(state, roundKey)
     log.info("round[{0:1d}].out  \t{1}".format(10, bytes2hex(state)))
 
     return state
+
 
 def AES128Decrypt(input, key):
     """
@@ -242,7 +254,7 @@ def AES128Decrypt(input, key):
     Nr = 10
 
     w = KeyExpansion(key)
-    roundKey = getRoundKeys(w[Nr*Nb: (Nr+1)*Nb])
+    roundKey = getRoundKeys(w[Nr * Nb: (Nr + 1) * Nb])
     log.info("round[{0:1d}].iinput\t{1}".format(0, bytes2hex(input)))
     log.info("round[{0:1d}].ik_sch\t{1}".format(0, bytes2hex(roundKey)))
 
@@ -255,11 +267,12 @@ def AES128Decrypt(input, key):
         state = InvShiftRows(state)
         log.info("round[{0:1d}].is_row\t{1}".format(round, bytes2hex(state)))
 
-        state = InvSubBytes(state)      
+        state = InvSubBytes(state)
         log.info("round[{0:1d}].is_box\t{1}".format(round, bytes2hex(state)))
 
-        roundKey = getRoundKeys(w[(round-1)*Nb : round*Nb])
-        log.info("round[{0:1d}].ik_sch\t{1}".format(round, bytes2hex(roundKey)))
+        roundKey = getRoundKeys(w[(round - 1) * Nb: round * Nb])
+        log.info(
+            "round[{0:1d}].ik_sch\t{1}".format(round, bytes2hex(roundKey)))
 
         state = AddRoundKey(state, roundKey)
         log.info("round[{0:1d}].ik_add\t{1}".format(round, bytes2hex(state)))
@@ -282,6 +295,7 @@ def AES128Decrypt(input, key):
 
     return state
 
+
 def AES128Encrypt_ECB(input, key):
     plaintexts = partitionList(input, 16)
     ciphertext = bytearray()
@@ -291,6 +305,7 @@ def AES128Encrypt_ECB(input, key):
         ciphertexts += c
 
     return ciphertexts
+
 
 def AES128Decrypt_ECB(input, key):
     ciphertexts = partitionList(input, 16)
@@ -302,6 +317,7 @@ def AES128Decrypt_ECB(input, key):
 
     return plaintexts
 
+
 def detectECB(ciphertext):
     p = partitionList(ciphertext, 16)
     score = 0
@@ -311,4 +327,3 @@ def detectECB(ciphertext):
                 score += 1
 
     return score
-

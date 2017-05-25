@@ -45,20 +45,25 @@ def testShiftRows():
 
     print("Passed testShiftRows()")
 
+
 def testInvShiftRows():
     vector1 = hex2bytes("7ad5fda789ef4e272bca100b3d9ff59f")
     solution1 = hex2bytes("7a9f102789d5f50b2beffd9f3dca4ea7")
-    assert solution1 == InvShiftRows(vector1), "Failed testInvShiftRows() with v1"
+    assert solution1 == InvShiftRows(
+        vector1), "Failed testInvShiftRows() with v1"
 
     vector2 = hex2bytes("b458124c68b68a014b99f82e5f15554c")
     solution2 = hex2bytes("b415f8016858552e4bb6124c5f998a4c")
-    assert solution2 == InvShiftRows(vector2), "Failed testInvShiftRows() with v2"
+    assert solution2 == InvShiftRows(
+        vector2), "Failed testInvShiftRows() with v2"
 
     vector3 = hex2bytes("a7be1a6997ad739bd8c9ca451f618b61")
     solution3 = hex2bytes("a761ca9b97be8b45d8ad1a611fc97369")
-    assert solution3 == InvShiftRows(vector3), "Failed testInvShiftRows() with v3"
-    
+    assert solution3 == InvShiftRows(
+        vector3), "Failed testInvShiftRows() with v3"
+
     print("Passed testInvShiftRows()")
+
 
 def testMixColumns():
     vector1 = hex2bytes("2d6d7ef03f33e334093602dd5bfb12c7")
@@ -75,57 +80,66 @@ def testMixColumns():
 
     print("Passed testMixColumns()")
 
+
 def testInvMixColumns():
     vector1 = hex2bytes("c57e1c159a9bd286f05f4be098c63439")
     solution1 = hex2bytes("b458124c68b68a014b99f82e5f15554c")
-    assert solution1 == InvMixColumns(vector1), "Failed testInvMixColumns() with v1"
+    assert solution1 == InvMixColumns(
+        vector1), "Failed testInvMixColumns() with v1"
 
     vector2 = hex2bytes("6385b79ffc538df997be478e7547d691")
     solution2 = hex2bytes("2d6d7ef03f33e334093602dd5bfb12c7")
-    assert solution2 == InvMixColumns(vector2), "Failed testInvMixColumns() with v2"
+    assert solution2 == InvMixColumns(
+        vector2), "Failed testInvMixColumns() with v2"
 
     vector3 = hex2bytes("5f72641557f5bc92f7be3b291db9f91a")
     solution3 = hex2bytes("6353e08c0960e104cd70b751bacad0e7")
-    assert solution3 == InvMixColumns(vector3), "Failed testInvMixColumns() with v3"
-    
+    assert solution3 == InvMixColumns(
+        vector3), "Failed testInvMixColumns() with v3"
+
     print("Passed testInvMixColumns()")
 
 
 def testKeyExpansion():
     print("Passed testKeyExpansion() [TODO]")
 
+
 def testGetRoundKeys():
     roundKeys = [0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c]
-    solution = bytearray([ 0x2b, 0x7e, 0x15, 0x16,
-                           0x28, 0xae, 0xd2, 0xa6, 
-                           0xab, 0xf7, 0x15, 0x88,
-                           0x09, 0xcf, 0x4f, 0x3c ])
+    solution = bytearray([0x2b, 0x7e, 0x15, 0x16,
+                          0x28, 0xae, 0xd2, 0xa6,
+                          0xab, 0xf7, 0x15, 0x88,
+                          0x09, 0xcf, 0x4f, 0x3c])
     assert solution == getRoundKeys(roundKeys), "Failed testGetRoundKeys()"
     print("Passed testGetRoundKeys()")
+
 
 def testAddRoundKey():
     a = hex2bytes("3243f6a8885a308d313198a2e0370734")
     b = hex2bytes("2b7e151628aed2a6abf7158809cf4f3c")
     s = hex2bytes("193de3bea0f4e22b9ac68d2ae9f84808")
 
-    assert s == AddRoundKey(a,b), "Failed testAddRoundKey"
+    assert s == AddRoundKey(a, b), "Failed testAddRoundKey"
     print("Passed testAddRoundKey")
+
 
 def testAES128Encrypt():
     input = hex2bytes("00112233445566778899aabbccddeeff")
-    key=hex2bytes("000102030405060708090a0b0c0d0e0f")
-    output=hex2bytes("69c4e0d86a7b0430d8cdb78070b4c55a")
+    key = hex2bytes("000102030405060708090a0b0c0d0e0f")
+    output = hex2bytes("69c4e0d86a7b0430d8cdb78070b4c55a")
     assert output == AES128Encrypt(input, key), "Failed testAES128Encrypt()"
 
     print("Passed testAES128Encrypt()")
 
+
 def testAES128Decrypt():
     output = hex2bytes("00112233445566778899aabbccddeeff")
-    key=hex2bytes("000102030405060708090a0b0c0d0e0f")
-    input=hex2bytes("69c4e0d86a7b0430d8cdb78070b4c55a")
+    key = hex2bytes("000102030405060708090a0b0c0d0e0f")
+    input = hex2bytes("69c4e0d86a7b0430d8cdb78070b4c55a")
     assert output == AES128Decrypt(input, key), "Failed testAES128Decrypt()"
 
     print("Passed testAES128Decrypt()")
+
 
 def main():
     testSBoxes()
