@@ -10,7 +10,7 @@ from libs.utils import RotWordLeft, hexdump, partitionList, bytes2hex
 from libs.math import gMul
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARN)
 log = logging.getLogger(__name__)
 # SBoxes should only be generated once
 # and not every time SubBytes or InvSubBytes gets called
@@ -281,4 +281,31 @@ def AES128Decrypt(input, key):
     log.info("round[{0:1d}].iout  \t{1}".format(10, bytes2hex(state)))
 
     return state
+
+def AES128Encrypt_ECB(input, key):
+    plaintexts = partitionList(input, 16)
+    ciphertext = bytearray()
+
+    for block in plaintexts:
+        c = AES128Encrypt(block, key)
+        ciphertexts += c
+
+    return ciphertexts
+
+def AES128Decrypt_ECB(input, key):
+    ciphertexts = partitionList(input, 16)
+    plaintexts = bytearray()
+
+    for block in ciphertexts:
+        c = AES128Decrypt(block, key)
+        plaintexts += c
+
+    return plaintexts
+
+
+
+
+
+    
+
 

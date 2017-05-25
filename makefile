@@ -10,4 +10,4 @@ run:
 	python3 Set$(s)Challenge$(c).py
 
 init:
-	export PYTHONPATH=:$(shell echo $PYTHONPATH):$(shell pwd)/libs
+	export PYTHONPATH=:$(shell echo $$PYTHONPATH):$(shell pwd)/libs

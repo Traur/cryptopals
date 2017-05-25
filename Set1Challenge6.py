@@ -28,7 +28,8 @@ bestKeysize = estimateKeysize(ciphertext, 40)[0]
 #	 So instead of
 #		key=bytearray(b'Terminator X: Bring the noise')
 # 	it becomes
-#		key=bytearray(b"Terminator X: Bring\'the noiseTerminator X: Bring the noise")
+# key=bytearray(b"Terminator X: Bring\'the noiseTerminator X: Bring the
+# noise")
 
 #"5. Now that you probably know the KEYSIZE: break the ciphertext into blocks of KEYSIZE length."
 blocks = partitionList(ciphertext, bestKeysize)
