@@ -6,9 +6,12 @@ DO NOT USE THIS STUFF FOR ANYTHING but learning!
 """
 
 from libs.crypto.xor import fixedXOR
-from libs.utils import RotWordLeft, hexdump
+from libs.utils import RotWordLeft, hexdump, partitionList, bytes2hex
 from libs.math import gMul
 
+import logging
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 # SBoxes should only be generated once
 # and not every time SubBytes or InvSubBytes gets called
 ForwardSBox = None
@@ -30,22 +33,23 @@ def initializeSubstitutionBoxes():
     # b_i = b_i ^ b_i + 4%8 ^ b_i+5%8 ^ b_i+6%8 ^ b_i+7%8 ^0x63
     c = 0x63
     for enum in range(256):
-        #Substitute each byte
+        # Substitute each byte
         b = inverse[enum]
         B = 0
         # Reverse Order
         for i in [7, 6, 5, 4, 3, 2, 1, 0]:
             bi = (b >> i) & 0x1
-            bi ^= (b >> ((i+4)%8)) & 0x1
-            bi ^= (b >> ((i+5)%8)) & 0x1
-            bi ^= (b >> ((i+6)%8)) & 0x1
-            bi ^= (b >> ((i+7)%8)) & 0x1
+            bi ^= (b >> ((i + 4) % 8)) & 0x1
+            bi ^= (b >> ((i + 5) % 8)) & 0x1
+            bi ^= (b >> ((i + 6) % 8)) & 0x1
+            bi ^= (b >> ((i + 7) % 8)) & 0x1
             bi ^= (c >> i) & 0x1
             B = (B << 1) | bi
         FSBOX[enum] = B
         ISBOX[B] = enum
 
     return FSBOX, ISBOX
+
 
 def SubBytes(s):
     global ForwardSBox, InverseSBox
@@ -57,15 +61,37 @@ def SubBytes(s):
         state[i] = ForwardSBox[s[i]]
     return state
 
+def InvSubBytes(s):
+    global ForwardSBox, InverseSBox
+    state = s[:]
+    if InverseSBox == None:
+        ForwardSBox, InverseSBox = initializeSubstitutionBoxes()
+
+    for i in range(len(s)):
+        state[i] = InverseSBox[s[i]]
+    return state
 
 def ShiftRows(s):
     state = s[:]
+
     def shift(r, Nb): return r % 4
     def map(r, c): return r + (4 * (c + shift(r, 4))) % 16
 
     for r in range(4):
         for c in range(4):
-            state[r+4*c] = s[map(r,c)]
+            state[r + 4 * c] = s[map(r, c)]
+    return state
+
+def InvShiftRows(s):
+    state = s[:]
+
+    def shift(r, Nb): return r % 4
+    def map(r, c): return r + (4 * (c + shift(r, 4))) % 16
+
+    for r in range(4):
+        for c in range(4):
+            state[map(r,c)] = s[r + 4 * c]
+
     return state
 
 def MixColumns(s):
@@ -76,70 +102,183 @@ def MixColumns(s):
             offset = 4 * c
             result = 0
             for i in range(4):
-               result ^= gMul(m[i], s[i+offset])
-            state[r+offset] = result
+                result ^= gMul(m[i], s[i + offset])
+            state[r + offset] = result
             m = RotWordLeft(m, 3)
     return state
 
+def InvMixColumns(s):
+    m = [0x0e, 0x0b, 0x0d, 0x09]
+    state = s[:]
+    for c in range(4):
+        for r in range(4):
+            offset = 4 * c
+            result = 0
+            for i in range(4):
+                result ^= gMul(m[i], s[i + offset])
+            state[r + offset] = result
+            m = RotWordLeft(m, 3)
+    return state
+
+
+
+def word2bytes(word):
+    result = bytearray(4)
+    for i in range(4):
+        result[i] = (word >> i*8) & 0xff
+    return result[::-1]
+
+def bytes2word(bytes):
+    result = 0x0
+    bytes = bytes[::-1]
+    for i,n in enumerate(bytes):
+        result |= (n << i*8)
+    return result
+
 def KeyExpansion(key):
-    w = key[:]
-    Nk = 4 #(number of words in Key)
-    Nb = 4 #(Number of Bytes in Word)
-    Nr = 10 #(12 or 14 -> Number of Rounds)
+    Nk = 4  # (number of words in Key)
+    Nb = 4  # (Number of Bytes in Word)
+    Nr = 10  # (12 or 14 -> Number of Rounds)
 
-    necessaryBytes = 4 * Nb * (Nr + 1)
+    necessaryWords =  Nb * (Nr + 1)
+    w = [0] * necessaryWords
+    
+    # Step 1: Copy key as 4Byte-Words into List()
+    p = partitionList(key, 4)
+    for i,l in enumerate(p):
+        w[i] = bytes2word(l)
 
-    # Initialize Rcon
-    Rcon = bytearray([0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36])
-    for i in range(Nk, necessaryBytes, 4):
-        temp = w[i - 4:4 + (i - 4)]  # 4 Bytes
-        hexdump(temp, title="temp in round={0}".format(i), width=4)
+    Rcon = list(
+        [0xCAFEBABE, # Rcon starts with i=1
+         0x01000000, 
+         0x02000000, 
+         0x04000000, 
+         0x08000000, 
+         0x10000000,
+         0x20000000, 
+         0x40000000, 
+         0x80000000, 
+         0x1b000000,
+         0x36000000])
+
+    for i in range(Nk, necessaryWords):
+        # Take the previous word
+        temp = w[i-1]
         if i % Nk == 0:
-            # Transformation
-            transformed = SubBytes(RotWordLeft(temp))
-            temp = fixedXOR(transformed, Rcon[i // Nk: (i // Nk)+4])
+            afterRotWord = bytes2word(RotWordLeft(word2bytes(temp)))
+            afterSubBytes = bytes2word(SubBytes(word2bytes(afterRotWord)))
+            afterRcon = afterSubBytes ^ Rcon[i//Nk]
+            temp = afterRcon
 
-        # Insert AES>128 here
-
-        for k in range(4):
-            w[i+k] = temp[k] ^ w[i-Nk+k]
+        elif Nk > 6 and i % Nk == 4:
+            temp = bytes2word(SubBytes(word2byte(temp)))
+        w[i] = w[i-Nk] ^ temp
 
     return w
-
 
 def AddRoundKey(s, w_l):
     """
     XORs each row with every other row in w_l
     """
-    for r in range(4):
-        for c in range(4):
-            s[r + 4 * c] = s[r + 4 * c] ^ w_l[r + 4 * c]
+    return fixedXOR(s, w_l)
 
-    return s
+def getRoundKeys(keys):
+    result = bytearray(4*4)
 
+    for i,k in enumerate(keys):
+        bytes = word2bytes(k)
+        for j, b in enumerate(bytes):
+            result[i*4+j] = b
+
+    return result
 
 def AES128Encrypt(input, key):
     """
     Encrypts the input with the key using the
-    AES Cipher. 
+    AES Cipher.
     """
     Nb = 4
     Nk = 4
     Nr = 10
 
     w = KeyExpansion(key)
+    log.info("round[{0:1d}].input\t{1}".format(0, bytes2hex(input)))
+    log.info("round[{0:1d}].k_sch\t{1}".format(0, bytes2hex(key)))
 
     state = input[:]
-    state = AddRoundKey(state, w[0:4])
+    state = AddRoundKey(state, getRoundKeys(w[0:Nb]))
 
-    for round in range(1, Nr - 1):
+    for round in range(1, Nr):
+        log.info("round[{0:1d}].start\t{1}".format(round, bytes2hex(state)))
         state = SubBytes(state)
+        log.info("round[{0:1d}].s_box\t{1}".format(round, bytes2hex(state)))
         state = ShiftRows(state)
+        log.info("round[{0:1d}].s_row\t{1}".format(round, bytes2hex(state)))
         state = MixColumns(state)
-        state = AddRoundKey(state, w[round * Nb: (round + 1) * Nb - 1])
+        log.info("round[{0:1d}].m_col\t{1}".format(round, bytes2hex(state)))
+        roundKey = getRoundKeys(w[round*Nb : (round+1)*Nb])
+        log.info("round[{0:1d}].k_sch\t{1}".format(round, bytes2hex(roundKey)))
+        state = AddRoundKey(state, roundKey)
 
+    log.info("round[{0:1d}].start\t{1}".format(10, bytes2hex(state)))
     state = SubBytes(state)
+    log.info("round[{0:1d}].s_box\t{1}".format(10, bytes2hex(state)))
     state = ShiftRows(state)
-    state = AddRoundKey(state, w[Nr * Nb: (Nr + 1) * Nb - 1])
+    log.info("round[{0:1d}].s_row\t{1}".format(10, bytes2hex(state)))
+    roundKey = getRoundKeys(w[Nr*Nb: (Nr+1)*Nb])
+    log.info("round[{0:1d}].k_sch\t{1}".format(10, bytes2hex(roundKey)))
+    state = AddRoundKey(state, roundKey)
+    log.info("round[{0:1d}].out  \t{1}".format(10, bytes2hex(state)))
 
     return state
+
+def AES128Decrypt(input, key):
+    """
+    Encrypts the input with the key using the
+    AES Cipher.
+    """
+    Nb = 4
+    Nk = 4
+    Nr = 10
+
+    w = KeyExpansion(key)
+    roundKey = getRoundKeys(w[Nr*Nb: (Nr+1)*Nb])
+    log.info("round[{0:1d}].iinput\t{1}".format(0, bytes2hex(input)))
+    log.info("round[{0:1d}].ik_sch\t{1}".format(0, bytes2hex(roundKey)))
+
+    state = input[:]
+    state = AddRoundKey(state, roundKey)
+
+    for round in range(Nr, 1, -1):
+        log.info("round[{0:1d}].istart\t{1}".format(round, bytes2hex(state)))
+
+        state = InvShiftRows(state)
+        log.info("round[{0:1d}].is_row\t{1}".format(round, bytes2hex(state)))
+
+        state = InvSubBytes(state)      
+        log.info("round[{0:1d}].is_box\t{1}".format(round, bytes2hex(state)))
+
+        roundKey = getRoundKeys(w[(round-1)*Nb : round*Nb])
+        log.info("round[{0:1d}].ik_sch\t{1}".format(round, bytes2hex(roundKey)))
+
+        state = AddRoundKey(state, roundKey)
+        log.info("round[{0:1d}].ik_add\t{1}".format(round, bytes2hex(state)))
+
+        state = InvMixColumns(state)
+
+    log.info("round[{0:1d}].start\t{1}".format(10, bytes2hex(state)))
+
+    state = InvShiftRows(state)
+    log.info("round[{0:1d}].is_row\t{1}".format(10, bytes2hex(state)))
+
+    state = InvSubBytes(state)
+    log.info("round[{0:1d}].is_box\t{1}".format(10, bytes2hex(state)))
+
+    roundKey = getRoundKeys(w[0:Nb])
+    log.info("round[{0:1d}].ik_sch\t{1}".format(10, bytes2hex(roundKey)))
+
+    state = AddRoundKey(state, roundKey)
+    log.info("round[{0:1d}].iout  \t{1}".format(10, bytes2hex(state)))
+
+    return state
+
