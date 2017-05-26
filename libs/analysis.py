@@ -3,6 +3,7 @@ This file offers functions which have something to do with analysis,
 e.g. determine if a given bytestring is likely to be english,
  measuring the edit distance between to bytestrings, or other
 """
+from libs.utils import partitionList
 
 
 def scoreEnglish(plaintext, fast=True):
@@ -38,3 +39,15 @@ def editDistance(bytes1, bytes2):
     # Add length difference
     distance += 8 * (len(longerBytes) - len(shorterBytes))
     return distance
+
+def detectECB(ciphertext):
+    p = partitionList(ciphertext, 16)
+    score = 0
+    for i in range(len(p)):
+        for k in range(len(p)):
+            if i != k and p[i] == p[k]:
+                score += 1
+
+    return score
+
+

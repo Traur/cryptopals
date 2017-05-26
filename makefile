@@ -1,5 +1,5 @@
-s=1
-c=8
+s=2
+c=10
 
 .PHONY: clean
 clean:

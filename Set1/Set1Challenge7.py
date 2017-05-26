@@ -1,5 +1,6 @@
 from libs.utils import hexdump
-from libs.crypto.aes import AES128Decrypt_ECB
+from libs.crypto.blockciphermodes import AES128Decrypt_ECB
+
 import base64
 # Read File
 with open("Set1/Set1Challenge7.txt", "rb") as file:

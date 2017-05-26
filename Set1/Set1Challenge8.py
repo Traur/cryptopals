@@ -1,5 +1,5 @@
 from libs.utils import hexdump, hex2bytes
-from libs.crypto.aes import detectECB
+from libs.analysis import detectECB
 import base64
 
 # Read File

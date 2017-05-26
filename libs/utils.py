@@ -102,11 +102,3 @@ def partitionList(mylist, buckets):
 def RotWordLeft(word, n=1):
     n = n % len(word)
     return word[n:] + word[:n]
-
-
-if __name__ == "__main__":
-    from random import randint
-    a = bytearray([randint(0, 255) for i in range(2000)])
-    hexdump2(a, width=32)
-    a = bytearray(55)
-    hexdump2(a, width=32, title="Just 55x 0x0 bytes!")

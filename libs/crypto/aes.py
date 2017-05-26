@@ -295,35 +295,3 @@ def AES128Decrypt(input, key):
 
     return state
 
-
-def AES128Encrypt_ECB(input, key):
-    plaintexts = partitionList(input, 16)
-    ciphertext = bytearray()
-
-    for block in plaintexts:
-        c = AES128Encrypt(block, key)
-        ciphertexts += c
-
-    return ciphertexts
-
-
-def AES128Decrypt_ECB(input, key):
-    ciphertexts = partitionList(input, 16)
-    plaintexts = bytearray()
-
-    for block in ciphertexts:
-        c = AES128Decrypt(block, key)
-        plaintexts += c
-
-    return plaintexts
-
-
-def detectECB(ciphertext):
-    p = partitionList(ciphertext, 16)
-    score = 0
-    for i in range(len(p)):
-        for k in range(len(p)):
-            if i != k and p[i] == p[k]:
-                score += 1
-
-    return score
