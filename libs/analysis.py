@@ -4,7 +4,8 @@ e.g. determine if a given bytestring is likely to be english,
  measuring the edit distance between to bytestrings, or other
 """
 from libs.utils import partitionList
-
+from libs.crypto.blockciphermodes import AES128Encrypt_ECB, AES128Encrypt_CBC
+import random
 
 def scoreEnglish(plaintext, fast=True):
     assert type(plaintext) == bytearray or type(plaintext) == bytes
@@ -50,4 +51,20 @@ def detectECB(ciphertext):
 
     return score
 
+def encryptionOracle(input):
+    key = bytearray([random.randint(0,255) for _ in range(16)])
+    prepend = bytearray([random.randint(0,255) for _ in range(random.randint(5,10)) ]) 
+    append = bytearray([random.randint(0,255) for _ in range(random.randint(5,10))])
+    
+    plaintext = prepend + input + append
+    coin = random.randint(0,1)
+
+    if coin == 0:
+        return AES128Encrypt_ECB(plaintext, key), 0
+    else:
+        iv = bytearray([random.randint(0,255) for _ in range(16)])
+        return AES128Encrypt_CBC(plaintext, key, iv), 1
+    
+def detectEncryption():
+    input = ""
 

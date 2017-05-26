@@ -1,8 +1,8 @@
-from libs.crypto.blockciphermodes import PKCS7Padding
+from libs.crypto.blockciphermodes import add7Padding
 
 input = bytearray("YELLOW SUBMARINE", "utf-8")
 output = bytearray("YELLOW SUBMARINE\x04\x04\x04\x04", "utf-8")
-solution = PKCS7Padding(input, 20)
+solution = add7Padding(input, 20)
 assert solution == output
 
 

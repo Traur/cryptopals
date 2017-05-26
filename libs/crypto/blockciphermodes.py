@@ -1,17 +1,25 @@
 from libs.crypto.aes import AES128Encrypt, AES128Decrypt
-from libs.utils import partitionList
+from libs.utils import partitionList, hexdump
 from libs.crypto.xor import fixedXOR
-def PKCS7Padding(input, n):
-    result = list(input)
-    dif = n - len(input)
-    result += ([dif]*dif)
-    return bytearray(result)
 
+def add7Padding(input, n):
+    assert type(input) == bytearray
+    if len(input) % n == 0:
+        return input
+
+
+    # Determine how many bytes needed to pad the last block to blocksize n
+    dif = n - (len(input) % n)
+    append = bytearray([dif]*dif)
+
+    return input + append
 
 def AES128Encrypt_ECB(input, key):
+    input = add7Padding(input, 16)
+    
     plaintexts = partitionList(input, 16)
     ciphertext = bytearray()
-
+    
     for block in plaintexts:
         c = AES128Encrypt(block, key)
         ciphertext += c
@@ -31,7 +39,22 @@ def AES128Decrypt_ECB(input, key):
 
 
 def AES128Encrypt_CBC(input, key, iv):
-    return -1 #TODO
+    input = add7Padding(input, 16)
+    plaintexts = partitionList(input, 16)
+    ciphertexts = list()
+    
+    # Round 0
+    ciphertexts.append(AES128Encrypt(fixedXOR(plaintexts[0], iv), key))
+    for i in range(1, len(plaintexts)):
+        ciphertexts.append(AES128Encrypt(fixedXOR(ciphertexts[i-1], plaintexts[i]), key))
+
+    result = bytearray()
+    for e in ciphertexts:
+        for f in e:
+            result.append(f)
+
+    return result
+
 
 def AES128Decrypt_CBC(input, key, iv):
     ciphertexts = partitionList(input, 16)

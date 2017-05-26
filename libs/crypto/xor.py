@@ -3,9 +3,6 @@ This file countains all related crypto functions using XOR
 and to break it respectivly.
 """
 
-import libs.analysis
-
-
 def fixedXOR(buf1, buf2):
     assert len(buf1) == len(buf2), "{0} vs {1}".format(len(buf1), len(buf2))
     result = bytearray()
@@ -17,6 +14,7 @@ def fixedXOR(buf1, buf2):
 
 def breakSingleByteXOR(ciphertext):
     assert type(ciphertext) == bytearray or type(ciphertext) == bytes
+    from libs.analysis import scoreEnglish
     bestScore = 0
     bestPlaintext = None
     bestKey = None
@@ -24,7 +22,7 @@ def breakSingleByteXOR(ciphertext):
         longkey = bytes([key]) * (len(ciphertext))
         plaintext = fixedXOR(longkey, ciphertext)
 
-        lastScore = libs.analysis.scoreEnglish(plaintext)
+        lastScore = scoreEnglish(plaintext)
 
         if(lastScore > bestScore):
             bestScore = lastScore
@@ -46,6 +44,7 @@ def repeatingKeyXOR(ciphertext, key):
 
 def estimateKeysize(ciphertext, maxlen):
     assert type(ciphertext) == bytearray or type(ciphertext) == bytes
+    from libs.analysis import editDistance
     # Possible distances go from 0 (exakt same) to maxlen*8 (every bit is
     # different (0, maxlen*8]
     smallestDistance = 8 * maxlen + 1
@@ -65,12 +64,12 @@ def estimateKeysize(ciphertext, maxlen):
         b4 = ciphertext[(keysize * 4):(keysize * 6)]
 
         # There are n(n-1)/2 == 4*3/2 = 6 pairs
-        d1 = libs.analysis.editDistance(b1, b2)
-        d2 = libs.analysis.editDistance(b1, b3)
-        d3 = libs.analysis.editDistance(b1, b4)
-        d4 = libs.analysis.editDistance(b2, b3)
-        d5 = libs.analysis.editDistance(b2, b4)
-        d6 = libs.analysis.editDistance(b3, b4)
+        d1 = editDistance(b1, b2)
+        d2 = editDistance(b1, b3)
+        d3 = editDistance(b1, b4)
+        d4 = editDistance(b2, b3)
+        d5 = editDistance(b2, b4)
+        d6 = editDistance(b3, b4)
 
         distance = (d1 + d2 + d3 + d4 + d5 + d6) / (6 * keysize)
         # 4. The KEYSIZE with the smallest normalized edit distance is probably the key. You could
